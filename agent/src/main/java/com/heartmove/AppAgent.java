@@ -39,18 +39,13 @@ public class AppAgent {
     public static void agentmain(String args, Instrumentation inst) throws Exception{
         System.out.println("agentmain args:" + args);
 
-        String coreJarPath = "F:\\git_code\\dynamic-agent\\agent-core\\target\\agent-core-1.0.0-SNAPSHOT-jar-with-dependencies.jar";
+        String coreJarPath = "F:\\github_code\\dynamic-agent\\agent-core\\target\\agent-core-1.0.0-SNAPSHOT-jar-with-dependencies.jar";
         //防止与应用的jar冲突，通过自定义类加载器加载 agent-core.jar,并且不委派给父类加载器加载
         MyClassLoader myClassLoader = new MyClassLoader(new URL[]{new File(coreJarPath).toURI().toURL()});
         //加载 Enhancer.class
         Class<?> enhancerClass = myClassLoader.loadClass("com.heartmove.Enhancer");
         //构造 enhancer 实例
         ClassFileTransformer enhancer = (ClassFileTransformer)enhancerClass.getConstructor(Instrumentation.class).newInstance(inst);
-
-		inst.addTransformer(enhancer, true);
-        //增加class
-		Method retransformClassesMethod = enhancerClass.getMethod("retransformClasses");
-		retransformClassesMethod.invoke(enhancer);
 
         Class[] classes = inst.getAllLoadedClasses();
 
@@ -86,8 +81,12 @@ public class AppAgent {
                 inst.redefineClasses(classDefinition);
                 //inst.retransformClasses();
             }else if(command.equals("unload")){
-                //移除class增强
-                inst.removeTransformer(enhancer);
+                Method method = enhancerClass.getMethod("resetTransformer");
+                method.invoke(enhancer);
+            }else if(command.equals("load")){
+                //class增强
+                Method retransformClassesMethod = enhancerClass.getMethod("retransformClasses");
+                retransformClassesMethod.invoke(enhancer);
             }
         }
     }

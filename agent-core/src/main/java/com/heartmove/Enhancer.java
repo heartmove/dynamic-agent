@@ -2,6 +2,7 @@ package com.heartmove;
 
 import org.apache.commons.io.FileUtils;
 import org.objectweb.asm.*;
+import org.springframework.cglib.transform.ClassTransformer;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,12 +34,17 @@ public class Enhancer implements ClassFileTransformer {
 	}
 
 	public void retransformClasses() throws Exception{
-		Class[] classes = inst.getAllLoadedClasses();
-		for (Class clazz : classes){
-			if(clazz.getName().endsWith("Controller") && clazz.getName().contains("belle")){
-				inst.retransformClasses(clazz);
-				System.out.println("success transform:" + clazz.getName());
+		try {
+			inst.addTransformer(this, true);
+			Class[] classes = inst.getAllLoadedClasses();
+			for (Class clazz : classes) {
+				if (clazz.getName().endsWith("Controller") && clazz.getName().contains("belle")) {
+					inst.retransformClasses(clazz);
+					System.out.println("success transform:" + clazz.getName());
+				}
 			}
+		} finally {
+			inst.removeTransformer(this);
 		}
 	}
 
@@ -48,6 +54,9 @@ public class Enhancer implements ClassFileTransformer {
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
 
 		try {
+			if(!className.endsWith("Controller") || !className.contains("belle")){
+				return classfileBuffer;
+			}
 			System.out.println(this.getClass() + ":transform:" + className);
 			//先读取class
 			ClassReader classReader = new ClassReader(classfileBuffer);
@@ -106,5 +115,29 @@ public class Enhancer implements ClassFileTransformer {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+
+	public void resetTransformer() throws Exception{
+		ClassFileTransformer resetClassTransformer = new ClassFileTransformer() {
+			@Override
+			public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
+					ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
+				if(!className.endsWith("Controller") || !className.contains("belle")){
+					return classfileBuffer;
+				}
+				return null;
+			}
+		};
+
+		inst.addTransformer(resetClassTransformer, true);
+
+		Class[] classes = inst.getAllLoadedClasses();
+		for (Class clazz : classes){
+			if(clazz.getName().endsWith("Controller") && clazz.getName().contains("belle")){
+				inst.retransformClasses(clazz);
+			}
+		}
+		inst.removeTransformer(resetClassTransformer);
 	}
 }

@@ -7,6 +7,7 @@ import com.sun.tools.attach.VirtualMachineDescriptor;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Scanner;
 
 /**
  * Unit test for simple AppAgent.
@@ -26,12 +27,13 @@ public class AppAgentTest
         }
         System.out.println("pid:" + pid);
         final VirtualMachine vm = VirtualMachine.attach(pid);
-        vm.loadAgent("F:\\git_code\\dynamic-agent\\agent\\target\\agent-1.0.0-SNAPSHOT-jar-with-dependencies.jar");
-        Thread.sleep(100000000);
+        vm.loadAgent("F:\\github_code\\dynamic-agent\\agent\\target\\agent-1.0.0-SNAPSHOT-jar-with-dependencies.jar");
+
         Runtime.getRuntime().addShutdownHook(new Thread(){
             @Override
             public void run() {
                 try {
+                    System.out.println("vm detach");
                     vm.detach();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -39,5 +41,12 @@ public class AppAgentTest
             }
         });
 
+        while(true){
+            String command = new Scanner(System.in).nextLine();
+            if(command.equals("exit")){
+                vm.detach();
+                System.exit(1);
+            }
+        }
     }
 }
