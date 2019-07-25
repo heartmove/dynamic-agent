@@ -12,13 +12,12 @@ import java.util.Scanner;
 /**
  * Unit test for simple AppAgent.
  */
-public class AppAgentTest
-{
+public class AppAgentTest {
     /**
      * Rigorous Test :-)
      */
     @Test
-    public void shouldAnswerWithTrue() throws Exception{
+    public void attach() throws Exception{
         String pid = null;
         for(VirtualMachineDescriptor descriptor : VirtualMachine.list()){
             if(descriptor.displayName().contains("Application")){

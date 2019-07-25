@@ -74,6 +74,7 @@ public class AppAgent {
                     System.out.println(String.format("名称：%s, 次数：%s, 耗时：%s", mxBean.getName(), mxBean.getCollectionCount(), mxBean.getCollectionTime()));
                 }
             }else if(commands[0].equals("redefine") && commands.length == 2){
+                //重定义class
                 byte[] bytes = toByteArrayNIO(commands[1]);
                 ClassReader classReader = new ClassReader(bytes);
                 System.out.println(classReader.getClassName().replaceAll("/","."));
@@ -81,29 +82,18 @@ public class AppAgent {
                 inst.redefineClasses(classDefinition);
                 //inst.retransformClasses();
             }else if(command.equals("unload")){
+                //取消class增强
                 Method method = enhancerClass.getMethod("resetTransformer");
                 method.invoke(enhancer);
             }else if(command.equals("load")){
-                //class增强
+                //增强class
                 Method retransformClassesMethod = enhancerClass.getMethod("retransformClasses");
                 retransformClassesMethod.invoke(enhancer);
             }
         }
     }
 
-    /**
-     * 启动前的，--javaagent
-     * @param args
-     * @param inst
-     * @throws Exception
-     */
-    public static void premain(String args, Instrumentation inst) throws Exception {
-        System.out.println("Pre Args:" + args);
-        Class[] classes = inst.getAllLoadedClasses();
-        for (Class clazz : classes){
-            System.out.println(clazz.getName());
-        }
-    }
+
     /**
      *
      * <p>Title: toByteArrayNIO</p>
@@ -142,6 +132,20 @@ public class AppAgent {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    /**
+     * 启动前的，--javaagent
+     * @param args
+     * @param inst
+     * @throws Exception
+     */
+    public static void premain(String args, Instrumentation inst) throws Exception {
+        System.out.println("Pre Args:" + args);
+        Class[] classes = inst.getAllLoadedClasses();
+        for (Class clazz : classes){
+            System.out.println(clazz.getName());
         }
     }
 }

@@ -27,23 +27,31 @@ import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
  */
 public class Enhancer implements ClassFileTransformer {
 
-	Instrumentation inst;
+	private Instrumentation inst;
 
 	public Enhancer(Instrumentation inst){
 		this.inst = inst;
 	}
 
+	/**
+	 * 批量增强已经加载的class
+	 * @throws Exception
+	 */
 	public void retransformClasses() throws Exception{
 		try {
+			//向Instrumentation对象中添加class增强对象
 			inst.addTransformer(this, true);
+			//获取所有已经加载的class
 			Class[] classes = inst.getAllLoadedClasses();
 			for (Class clazz : classes) {
-				if (clazz.getName().endsWith("Controller") && clazz.getName().contains("belle")) {
+				//只增强以Controller结尾的class
+				if (clazz.getName().endsWith("Controller")) {
 					inst.retransformClasses(clazz);
 					System.out.println("success transform:" + clazz.getName());
 				}
 			}
 		} finally {
+			//移除 class增强对象
 			inst.removeTransformer(this);
 		}
 	}
@@ -99,7 +107,9 @@ public class Enhancer implements ClassFileTransformer {
 				}
 
 			};
+			//构建字节码增强对象
 			AdviceWeaver adviceWeaver = new AdviceWeaver(Opcodes.ASM5, classWriter);
+			//增强当前class
 			classReader.accept(adviceWeaver, EXPAND_FRAMES);
 			byte[] bytes = classWriter.toByteArray();
 			try {
@@ -117,7 +127,10 @@ public class Enhancer implements ClassFileTransformer {
 		return null;
 	}
 
-
+	/**
+	 * 取消class增强
+	 * @throws Exception
+	 */
 	public void resetTransformer() throws Exception{
 		ClassFileTransformer resetClassTransformer = new ClassFileTransformer() {
 			@Override

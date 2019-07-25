@@ -17,12 +17,4 @@ public class AspectUtil {
 			e.printStackTrace();
 		}
 	}
-
-
-	public static void test(){
-		Object obj = new Object();
-		System.out.println("test");
-
-		AspectUtil.beforeReturn(obj);
-	}
 }
